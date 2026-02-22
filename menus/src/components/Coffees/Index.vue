@@ -21,6 +21,8 @@
     <div v-if="coffees.length === 0" class="empty">
       ไม่มีข้อมูลเมนูกาแฟ
     </div>
+    <div v-if="coffees.length">
+      <h4>จำนวนเมนู {{ coffees.length }}</h4> </div>
 
     <!-- MENU LIST -->
     <div class="menu-grid">
