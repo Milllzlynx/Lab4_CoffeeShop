@@ -1,11 +1,11 @@
 const { Coffee } = require("../models")
 const fs = require("fs")
 const path = require("path")
-
+ 
 const uploadDir = path.join(__dirname, "../../public/uploads")
-
+ 
 module.exports = {
-
+ 
   // ================= GET ALL =================
   async index(req, res) {
     try {
@@ -15,7 +15,7 @@ module.exports = {
       res.status(500).json({ error: err.message })
     }
   },
-
+ 
   // ================= GET ONE =================
   async show(req, res) {
     try {
@@ -26,29 +26,11 @@ module.exports = {
       res.status(500).json({ error: err.message })
     }
   },
-
+ 
   // ================= CREATE =================
   async create(req, res) {
     try {
-
-      let filename = null
-
-      if (req.file) {
-
-        // ลบรูปเก่า
-        const fs = require('fs')
-        const path = require('path')
-
-        if (coffee.image) {
-          const oldPath = path.join(__dirname, '../../public/uploads/', coffee.image)
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath)
-          }
-        }
-
-        coffee.image = req.file.filename
-      }
-
+ 
       const coffee = await Coffee.create({
         name: req.body.name,
         price: req.body.price,
@@ -56,90 +38,85 @@ module.exports = {
         status: req.body.status,
         description: req.body.description,
         content: req.body.content,
-        image: filename
+        image: req.body.image || null   // ⭐ ใช้ค่าจาก body
       })
-
+ 
       res.json(coffee)
-
+ 
     } catch (err) {
       console.error(err)
       res.status(500).json({ error: err.message })
     }
   },
-
+ 
   // ================= UPDATE =================
   async update(req, res) {
     try {
-
+ 
       const coffee = await Coffee.findByPk(req.params.coffeeId)
       if (!coffee) return res.status(404).send("Not found")
-
-      // ⭐ มีไฟล์ใหม่
-      if (req.file) {
-
-        // ลบรูปเก่า
-        if (coffee.image) {
-          const oldPath = path.join(uploadDir, coffee.image)
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath)
-        }
-
-        coffee.image = req.file.filename
-      }
-
+ 
       coffee.name = req.body.name
       coffee.price = req.body.price
       coffee.type = req.body.type
       coffee.status = req.body.status
       coffee.description = req.body.description
       coffee.content = req.body.content
-
+ 
+      // ⭐ ถ้ามี image ส่งมาใน body
+      if (req.body.image) {
+        coffee.image = req.body.image
+      }
+ 
       await coffee.save()
-
+ 
       res.json(coffee)
-
+ 
     } catch (err) {
       console.error(err)
       res.status(500).json({ error: err.message })
     }
   },
-
+ 
   // ================= DELETE =================
   async delete(req, res) {
     try {
-
+ 
       const coffee = await Coffee.findByPk(req.params.coffeeId)
       if (!coffee) return res.status(404).send("Not found")
-
-      // ลบรูป
+ 
+      // ลบไฟล์รูป
       if (coffee.image) {
         const filePath = path.join(uploadDir, coffee.image)
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
       }
-
+ 
       await coffee.destroy()
-
+ 
       res.json({ success: true })
-
+ 
     } catch (err) {
       res.status(500).json({ error: err.message })
     }
   },
-
+ 
   // ================= CKEditor Upload =================
   async uploadImage(req, res) {
     try {
-
+ 
       if (!req.file) {
-        return res.status(400).json({ error: "No file" })
+        return res.status(400).json({ error: "No file uploaded" })
       }
-
+ 
       res.json({
-        url: "http://localhost:8081/assets/uploads/" + req.file.filename
+        url: "http://localhost:8081/uploads/" + req.file.filename
       })
-
+ 
     } catch (err) {
       res.status(500).json({ error: err.message })
     }
   }
-
+ 
 }
